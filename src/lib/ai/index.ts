@@ -1,22 +1,16 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { QdrantClient } from "@qdrant/js-client-rest";
+import qdrantDB from "../../db/qdrant";
 import type { RetrievedExpressionDoc } from "../../model/retriever";
 import { fieldSchema } from "../../schema/field";
-import { buildContext } from "../../util/build-context";
-import { toExpressionTerm } from "../../util/transform";
 import type { TInput } from "../../schema/input";
+import { buildContext } from "../../util/build-context";
 import env from "../../util/env";
+import { toExpressionTerm } from "../../util/transform";
 
 const embeddings = new OpenAIEmbeddings({
   model: "text-embedding-3-large",
   apiKey: env.OPENAI_API_KEY,
-});
-
-const client = new QdrantClient({ host: 'localhost', port: 6333 });
-const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
-  client,
-  collectionName: "expressions",
 });
 
 const llm = new ChatOpenAI({
@@ -28,7 +22,10 @@ const llm = new ChatOpenAI({
 export async function ask(userInput: TInput[]) {
   const detailInput = userInput.filter(t => t.type === 'detail').map(t => t.input).join('\n');
   const formulaInput = userInput.filter(t => t.type === 'formula').map(t => t.input).join('\n');
-
+  const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
+    client: qdrantDB.getClient()!,
+    collectionName: "expressions",
+  });
   const retriever = vectorStore.asRetriever({ k: 2 });
   const retrievedDocs = await retriever.invoke(formulaInput);
 

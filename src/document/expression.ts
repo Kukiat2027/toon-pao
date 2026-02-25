@@ -2,7 +2,7 @@ import type { TValue } from "../schema/value";
 import type { TExpression } from "../schema/expression";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { QdrantClient } from "@qdrant/js-client-rest";
+import { QdrantDB } from "../db/qdrant";
 
 const value: TValue = {
   type: 'variable',
@@ -103,19 +103,15 @@ const expressionSeedDocuments: {
     },
   ];
 
+const embeddings = new OpenAIEmbeddings({
+  model: "text-embedding-3-large",
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
 export async function addExpressionDocumentsToQdrant(): Promise<void> {
-  if (!process.env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is required to create embeddings");
-  }
-
-  const embeddings = new OpenAIEmbeddings({
-    model: "text-embedding-3-large",
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-
-  const client = new QdrantClient({ host: "localhost", port: 6333 });
   const collectionName = "expressions";
-
+  const qdrantDB = new QdrantDB();
+  const client = qdrantDB.connect();
   await QdrantVectorStore.fromTexts(
     expressionSeedDocuments.map((doc) => doc.text),
     expressionSeedDocuments.map((doc) => ({
@@ -124,7 +120,7 @@ export async function addExpressionDocumentsToQdrant(): Promise<void> {
     })),
     embeddings,
     {
-      client,
+      client: client!,
       collectionName,
     }
   );

@@ -1,8 +1,14 @@
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from "elysia";
 import aiPlugin from "./plugin/ai";
+import qdrantDB from "./db/qdrant";
+import { logger } from "elysia-logger";
 
 const app = new Elysia()
+  .use(logger({
+    logDetails: true,
+  }))
+  .decorate('qdrant', qdrantDB.connect())
   .use(swagger({
     documentation: {
       info: {
