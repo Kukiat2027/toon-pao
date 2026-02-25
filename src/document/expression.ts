@@ -1,8 +1,9 @@
-import type { TValue } from "../schema/value";
-import type { TExpression } from "../schema/expression";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
-import { QdrantDB } from "../db/qdrant";
+import { DB } from "../constant/db";
+import client from "../db/qdrant";
+import type { TExpression } from "../schema/expression";
+import type { TValue } from "../schema/value";
 
 const value: TValue = {
   type: 'variable',
@@ -62,32 +63,32 @@ const nestedExpression4: TExpression = [
 const expressionSeedDocuments: {
   id: string;
   text: string;
-  expression: TExpression;
+  data: TExpression;
 }[] = [
     {
       id: "simple-expression",
       text: "Simple expression (10 + 10)",
-      expression: simpleExpression,
+      data: simpleExpression,
     },
     {
       id: "nested-expression-1",
       text: "Nested expression (10 + (10 + 10))",
-      expression: nestedExpression1,
+      data: nestedExpression1,
     },
     {
       id: "nested-expression-2",
       text: "Nested expression ((10 + 10) + 10)",
-      expression: nestedExpression2,
+      data: nestedExpression2,
     },
     {
       id: "nested-expression-3",
       text: "Nested expression ((10 + 10) + (10 + 10))",
-      expression: nestedExpression3,
+      data: nestedExpression3,
     },
     {
       id: "nested-expression-4",
       text: "Nested expression (((10 + 10) + 10) + (10 + 10))",
-      expression: nestedExpression4,
+      data: nestedExpression4,
     },
   ];
 
@@ -97,21 +98,23 @@ const embeddings = new OpenAIEmbeddings({
 });
 
 export async function addExpressionDocumentsToQdrant(): Promise<void> {
-  const collectionName = "expressions";
-  const qdrantDB = new QdrantDB();
-  const client = qdrantDB.connect();
-  await QdrantVectorStore.fromTexts(
-    expressionSeedDocuments.map((doc) => doc.text),
-    expressionSeedDocuments.map((doc) => ({
-      id: doc.id,
-      expression: doc.expression,
-    })),
-    embeddings,
-    {
-      client: client!,
-      collectionName,
-    }
-  );
+  const collectionName = DB.collection.vectorStore;
 
-  console.log(`Inserted ${expressionSeedDocuments.length} documents into ${collectionName}`);
+  try {
+    await QdrantVectorStore.fromTexts(
+      expressionSeedDocuments.map((doc) => doc.text),
+      expressionSeedDocuments.map((doc) => ({
+        id: doc.id,
+        data: doc.data,
+      })),
+      embeddings,
+      {
+        client: client.getClient()!,
+        collectionName,
+      }
+    );
+    console.log(`Inserted expression ${expressionSeedDocuments.length} documents into ${collectionName}`);
+  } catch (error) {
+    console.error(`Error Inserted expression documents to ${collectionName}:`, error);
+  }
 }

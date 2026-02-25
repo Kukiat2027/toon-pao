@@ -1,16 +1,22 @@
 import { z } from "zod";
 import { expression } from "./expression";
+import { value } from "./value";
 
 export const expressionTermSchema = z.object({
   type: z.literal('expression'),
   code: expression
 });
 
+export const valueSchema = z.object({
+  type: z.literal('value'),
+  code: value
+});
+
 export const ruleSchema = z.object({
   masterValidationId: z.string().nullable(),
   isGlobal: z.boolean(),
   seq: z.number(),
-  formula: z.union([expressionTermSchema, z.null()]),
+  formula: z.union([expressionTermSchema, valueSchema, z.null()]),
   validations: z.array(z.string()) // TODO:
 });
 

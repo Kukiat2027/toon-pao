@@ -11,7 +11,7 @@ export function buildContext(docs: RetrievedExpressionDoc[]): string {
         Document ${index + 1}
         id: ${String(doc.id)}
         text: ${doc.pageContent}
-        expression: ${JSON.stringify(doc.expression)}`
+        Formula: ${JSON.stringify(doc.data)}`
     )
     .join("\n\n");
 }

@@ -7,6 +7,7 @@ import type { TInput } from "../../schema/input";
 import { buildContext } from "../../util/build-context";
 import env from "../../util/env";
 import { toExpressionTerm } from "../../util/transform";
+import { DB } from "../../constant/db";
 
 const embeddings = new OpenAIEmbeddings({
   model: "text-embedding-3-large",
@@ -24,15 +25,15 @@ export async function ask(userInput: TInput[]) {
   const formulaInput = userInput.filter(t => t.type === 'formula').map(t => t.input).join('\n');
   const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
     client: qdrantDB.getClient()!,
-    collectionName: "expressions",
+    collectionName: DB.collection.vectorStore,
   });
   const retriever = vectorStore.asRetriever({ k: 2 });
   const retrievedDocs = await retriever.invoke(formulaInput);
-
+  console.log('retrievedDocs', retrievedDocs)
   const expressionDocs: RetrievedExpressionDoc[] = retrievedDocs.map((doc) => ({
     id: (doc.metadata?.id as string | number | undefined) ?? null,
     pageContent: doc.pageContent,
-    expression: doc.metadata?.expression ?? null,
+    data: doc.metadata?.data ?? null,
   }));
 
   const context = buildContext(expressionDocs);
@@ -51,6 +52,10 @@ export async function ask(userInput: TInput[]) {
       - type must be one of: string | number | boolean | date
       - If type is not one of the allowed types, throw an error
 
+      **Simple Value Rules (populate inside rules[].formula):**
+      - If the user provides simple value input, create a rule entry with formula.type = "value" and formula.code = the value
+      - If no simple value input is provided, return rules as an empty array
+
       **Expression Rules (populate inside rules[].formula):**
       - If the user provides formula input, create a rule entry with formula.type = "expression" and formula.code = the expression tree
       - Build the expression tree that best matches the formula input using the provided expression context
@@ -68,7 +73,7 @@ export async function ask(userInput: TInput[]) {
       **Formula Input (expression):**
       ${formulaInput}
 
-      **Expression Context:**
+      **Formula Context:**
       ${context}`,
     },
   ]);
@@ -81,7 +86,16 @@ export async function ask(userInput: TInput[]) {
         ...rule,
         formula: {
           ...rule.formula,
-          code: toExpressionTerm(rule.formula.code),
+          code: (() => {
+            switch (rule.formula.type) {
+              case "expression":
+                return toExpressionTerm(rule.formula.code);
+              case "value":
+                return rule.formula.code;
+              default:
+                return null;
+            }
+          })(),
         },
       };
     }),

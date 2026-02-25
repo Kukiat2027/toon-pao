@@ -6,12 +6,12 @@ export class QdrantDB {
 
   connect(): QdrantClient {
     if (!this.instance) {
-      console.log('Creating Qdrant client');
+      console.log('Connecting to Qdrant database...');
       this.instance = new QdrantClient({
         url: env.QDRANT_HOST,
         apiKey: env.QDRANT_API_KEY,
       });
-      console.log('Qdrant client created');
+      console.log('Connected to Qdrant database');
     }
     return this.instance;
   }
