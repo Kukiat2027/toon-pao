@@ -1,8 +1,8 @@
 import { Elysia, t } from "elysia";
-import { ask } from "./ai-func";
+import { ask } from "../lib/ai";
 
-const aiPlugin = new Elysia()
-  .post("/ai", ({ body }) => {
+const aiPlugin = new Elysia({ prefix: "/ai" })
+  .post("/ask", ({ body }) => {
     return ask(
       body.inputs.map(i => ({ type: i.type, input: i.input }))
     );
