@@ -1,11 +1,11 @@
 import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { QdrantClient } from "@qdrant/js-client-rest";
-import type { RetrievedExpressionDoc } from "./model/retriever";
-import { fieldSchema } from "./schema/field";
-import { buildContext } from "./util/build-context";
-import { toExpressionTerm } from "./util/transform";
-import type { TInput } from "./schema/input";
+import type { RetrievedExpressionDoc } from "../model/retriever";
+import { fieldSchema } from "../schema/field";
+import { buildContext } from "../util/build-context";
+import { toExpressionTerm } from "../util/transform";
+import type { TInput } from "../schema/input";
 
 const embeddings = new OpenAIEmbeddings({
   model: "text-embedding-3-large",

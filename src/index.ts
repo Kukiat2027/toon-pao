@@ -1,20 +1,18 @@
-import { Elysia, t } from "elysia";
-import { ask } from "./ai";
+import { swagger } from '@elysiajs/swagger';
+import { Elysia } from "elysia";
+import aiPlugin from "./plugin/ai";
 
 const app = new Elysia()
+  .use(swagger({
+    documentation: {
+      info: {
+        title: 'ToonPao API',
+        version: '1.0.0'
+      }
+    }
+  }))
   .get("/", () => "Hello Elysia")
-  .post("/ai", ({ body }) => {
-    return ask(
-      body.inputs.map(i => ({ type: i.type, input: i.input }))
-    );
-  }, {
-    body: t.Object({
-      inputs: t.Array(t.Object({
-        type: t.Union([t.Literal('detail'), t.Literal('formula')]),
-        input: t.String(),
-      })),
-    }),
-  })
+  .use(aiPlugin)
   .listen(3004);
 
 console.log(
