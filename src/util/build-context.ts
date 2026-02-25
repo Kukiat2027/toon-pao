@@ -1,6 +1,6 @@
-import type { RetrievedExpressionDoc } from "../model/retriever";
+import { DocumentInterface } from "@langchain/core/documents";
 
-export function buildContext(docs: RetrievedExpressionDoc[]): string {
+export function buildContext(docs: DocumentInterface<Record<string, any>>[]): string {
   if (docs.length === 0) {
     return "No relevant context found in vector store.";
   }
@@ -9,9 +9,9 @@ export function buildContext(docs: RetrievedExpressionDoc[]): string {
     .map(
       (doc, index) => `
         Document ${index + 1}
-        id: ${String(doc.id)}
+        id: ${String(doc.metadata.id)}
         text: ${doc.pageContent}
-        Formula: ${JSON.stringify(doc.data)}`
+        Formula: ${doc.metadata ? JSON.stringify(doc.metadata.data) : null}`
     )
     .join("\n\n");
 }

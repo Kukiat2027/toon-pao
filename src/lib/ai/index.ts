@@ -29,14 +29,7 @@ export async function ask(userInput: TInput[]) {
   });
   const retriever = vectorStore.asRetriever({ k: 2 });
   const retrievedDocs = await retriever.invoke(formulaInput);
-  console.log('retrievedDocs', retrievedDocs)
-  const expressionDocs: RetrievedExpressionDoc[] = retrievedDocs.map((doc) => ({
-    id: (doc.metadata?.id as string | number | undefined) ?? null,
-    pageContent: doc.pageContent,
-    data: doc.metadata?.data ?? null,
-  }));
-
-  const context = buildContext(expressionDocs);
+  const context = buildContext(retrievedDocs);
 
   const generated = await llm.invoke([
     {

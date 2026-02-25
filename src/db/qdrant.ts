@@ -5,15 +5,21 @@ export class QdrantDB {
   private instance: QdrantClient | null = null;
 
   connect(): QdrantClient {
-    if (!this.instance) {
-      console.log('Connecting to Qdrant database...');
-      this.instance = new QdrantClient({
-        url: env.QDRANT_HOST,
-        apiKey: env.QDRANT_API_KEY,
-      });
-      console.log('Connected to Qdrant database');
+    try {
+      if (!this.instance) {
+        console.log('Connecting to Qdrant database...');
+        this.instance = new QdrantClient({
+          url: env.QDRANT_HOST,
+          apiKey: env.QDRANT_API_KEY,
+        });
+        console.log('Connected to Qdrant database');
+      }
+
+      return this.instance;
+    } catch (error) {
+      console.error('Error connecting to Qdrant database:', error);
+      throw error;
     }
-    return this.instance;
   }
 
   getClient(): QdrantClient | null {
