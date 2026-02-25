@@ -1,5 +1,5 @@
 import type { TExpression, TExpressionNode } from "../schema/expression";
-import type { TExpressionTerm } from "../schema/output/expression";
+import type { TExpressionTerm } from "../schema/expression";
 
 export function toExpressionTerm(nodes: TExpression): TExpressionTerm {
   const root = nodes.find((n) => n.parentId === null);

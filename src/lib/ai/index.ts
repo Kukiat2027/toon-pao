@@ -6,10 +6,11 @@ import { fieldSchema } from "../../schema/field";
 import { buildContext } from "../../util/build-context";
 import { toExpressionTerm } from "../../util/transform";
 import type { TInput } from "../../schema/input";
+import env from "../../util/env";
 
 const embeddings = new OpenAIEmbeddings({
   model: "text-embedding-3-large",
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: env.OPENAI_API_KEY,
 });
 
 const client = new QdrantClient({ host: 'localhost', port: 6333 });
@@ -21,7 +22,7 @@ const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
 const llm = new ChatOpenAI({
   model: "gpt-4.1-mini",
   temperature: 0,
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: env.OPENAI_API_KEY,
 }).withStructuredOutput(fieldSchema);
 
 export async function ask(userInput: TInput[]) {
