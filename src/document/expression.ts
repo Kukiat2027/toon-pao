@@ -62,44 +62,32 @@ const nestedExpression4: TExpression = [
 const expressionSeedDocuments: {
   id: string;
   text: string;
-  expression: {
-    expression: TExpression;
-  };
+  expression: TExpression;
 }[] = [
     {
       id: "simple-expression",
       text: "Simple expression (10 + 10)",
-      expression: {
-        expression: simpleExpression,
-      },
+      expression: simpleExpression,
     },
     {
       id: "nested-expression-1",
       text: "Nested expression (10 + (10 + 10))",
-      expression: {
-        expression: nestedExpression1,
-      },
+      expression: nestedExpression1,
     },
     {
       id: "nested-expression-2",
       text: "Nested expression ((10 + 10) + 10)",
-      expression: {
-        expression: nestedExpression2,
-      },
+      expression: nestedExpression2,
     },
     {
       id: "nested-expression-3",
       text: "Nested expression ((10 + 10) + (10 + 10))",
-      expression: {
-        expression: nestedExpression3,
-      },
+      expression: nestedExpression3,
     },
     {
       id: "nested-expression-4",
       text: "Nested expression (((10 + 10) + 10) + (10 + 10))",
-      expression: {
-        expression: nestedExpression4,
-      },
+      expression: nestedExpression4,
     },
   ];
 

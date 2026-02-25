@@ -44,6 +44,7 @@ export async function ask(userInput: TInput[]) {
       You are an AI assistant that extracts a field structure with an embedded expression formula.
 
       **Field Structure Rules:**
+      - id: generate using randomUUID (uuid v4)
       - uuid: generate using randomUUID (uuid v4)
       - displayName must be the same as name
       - parentId is null
