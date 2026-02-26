@@ -16,6 +16,7 @@
     "crypto": "^1.0.1",
     "elysia": "latest",
     "elysia-logger": "^0.5.2",
+    "langchain": "^1.2.27",
     "zod": "^4.3.6"
   },
   "devDependencies": {

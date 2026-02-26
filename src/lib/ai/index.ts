@@ -1,26 +1,40 @@
-import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
+import { createAgent } from "langchain";
+import { DB } from "../../constant/db";
 import qdrantDB from "../../db/qdrant";
-import type { RetrievedExpressionDoc } from "../../model/retriever";
-import { fieldSchema } from "../../schema/field";
 import type { TInput } from "../../schema/input";
 import { buildContext } from "../../util/build-context";
 import env from "../../util/env";
 import { toExpressionTerm } from "../../util/transform";
-import { DB } from "../../constant/db";
+import { fieldSchema } from "../../schema/field";
+import { MemorySaver } from "@langchain/langgraph";
+
+const checkpointer = new MemorySaver();
 
 const embeddings = new OpenAIEmbeddings({
   model: "text-embedding-3-large",
   apiKey: env.OPENAI_API_KEY,
 });
 
-const llm = new ChatOpenAI({
+const llm = createAgent({
   model: "gpt-4.1-mini",
-  temperature: 0,
-  apiKey: env.OPENAI_API_KEY,
-}).withStructuredOutput(fieldSchema);
+  responseFormat: fieldSchema,
+  checkpointer,
+});
+// const llm = new ChatOpenAI({
+//   model: "gpt-4.1-mini",
+//   temperature: 0,
+//   apiKey: env.OPENAI_API_KEY,
+// }).withStructuredOutput(fieldSchema);
+
+const config = {
+  configurable: { thread_id: "1" },
+  context: { user_id: "1" },
+};
 
 export async function ask(userInput: TInput[]) {
+
   const detailInput = userInput.filter(t => t.type === 'detail').map(t => t.input).join('\n');
   const formulaInput = userInput.filter(t => t.type === 'formula').map(t => t.input).join('\n');
   const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
@@ -31,49 +45,53 @@ export async function ask(userInput: TInput[]) {
   const retrievedDocs = await retriever.invoke(formulaInput);
   const context = buildContext(retrievedDocs);
 
-  const generated = await llm.invoke([
-    {
-      role: "system",
-      content: `
-      You are an AI assistant that extracts a field structure with an embedded expression formula.
-
-      **Field Structure Rules:**
-      - id: generate using randomUUID (uuid v4)
-      - uuid: generate using randomUUID (uuid v4)
-      - displayName must be the same as name
-      - parentId is null
-      - type must be one of: string | number | boolean | date
-      - If type is not one of the allowed types, throw an error
-
-      **Simple Value Rules (populate inside rules[].formula):**
-      - If the user provides simple value input, create a rule entry with formula.type = "value" and formula.code = the value
-      - If no simple value input is provided, return rules as an empty array
-
-      **Expression Rules (populate inside rules[].formula):**
-      - If the user provides formula input, create a rule entry with formula.type = "expression" and formula.code = the expression tree
-      - Build the expression tree that best matches the formula input using the provided expression context
-      - If no exact match, infer the closest valid expression from context
-      - If no formula input is provided, return rules as an empty array
-
-      Return a single field JSON object.`,
-    },
-    {
-      role: "user",
-      content: `
-      **Detail Input (field structure):**
-      ${detailInput}
-
-      **Formula Input (expression):**
-      ${formulaInput}
-
-      **Formula Context:**
-      ${context}`,
-    },
-  ]);
+  const generated = await llm.invoke({
+    messages: [
+      {
+        role: "system",
+        content: `
+        You are an AI assistant that extracts a field structure with an embedded expression formula.
+  
+        **Field Structure Rules:**
+        - id: generate using randomUUID (uuid v4)
+        - uuid: generate using randomUUID (uuid v4)
+        - displayName must be the same as name
+        - parentId is null
+        - format date should be localized formats from DayJS
+        - type must be one of: string | number | boolean | date
+        - If type is not one of the allowed types, throw an error
+  
+        **Simple Value Rules (populate inside rules[].formula):**
+        - If the user provides simple value input, create a rule entry with formula.type = "value" and formula.code = the value
+        - If no simple value input is provided, return rules as an empty array
+  
+        **Expression Rules (populate inside rules[].formula):**
+        - If the user provides formula input, create a rule entry with formula.type = "expression" and formula.code = the expression tree
+        - isGlobal should be true when has formula input
+        - Build the expression tree that best matches the formula input using the provided expression context
+        - If no exact match, infer the closest valid expression from context
+        - If no formula input is provided, return rules as an empty array
+  
+        Return a single field JSON object.`,
+      },
+      {
+        role: "user",
+        content: `
+        **Detail Input (field structure):**
+        ${detailInput}
+  
+        **Formula Input (expression):**
+        ${formulaInput}
+  
+        **Formula Context:**
+        ${context}`,
+      },
+    ],
+  }, config);
 
   return {
-    ...generated,
-    rules: generated.rules.map((rule) => {
+    ...generated.structuredResponse,
+    rules: generated.structuredResponse?.rules.map((rule) => {
       if (!rule.formula) return rule;
       return {
         ...rule,
