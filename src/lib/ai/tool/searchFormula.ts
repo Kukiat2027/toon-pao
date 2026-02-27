@@ -20,16 +20,17 @@ export const searchFormulaTool = tool(
       client: qdrantDB.getClient()!,
       collectionName: DB.collection.vectorStore,
     });
-    const results = await vectorStore.similaritySearchWithScore(query, 2);
-    const retrievedDocs = results
+    const resultsWithScores = await vectorStore.similaritySearchWithScore(query, 2);
+
+    const results = resultsWithScores
       .filter(([, score]) => score >= SCORE_THRESHOLD)
       .map(([doc]) => doc);
 
-    if (retrievedDocs.length === 0) {
+    if (results.length === 0) {
       return "No relevant formula context found. Return rules as an empty array.";
     }
 
-    return buildContext(retrievedDocs);
+    return buildContext(results);
   },
   {
     name: "search_formula_context",
