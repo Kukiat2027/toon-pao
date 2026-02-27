@@ -19,7 +19,7 @@ const app = new Elysia()
   }))
   .get("/", () => "Hello Elysia")
   .use(aiPlugin)
-  .listen(3004);
+  .listen(Number(process.env.PORT) || 3004);
 
 console.log(
   `🦊 Elysia is running at ${app.server?.hostname}:${app.server?.port}`
