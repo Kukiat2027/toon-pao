@@ -1,93 +1,61 @@
-import { OpenAIEmbeddings } from "@langchain/openai";
-import { QdrantVectorStore } from "@langchain/qdrant";
 import { createAgent } from "langchain";
-import { DB } from "../../constant/db";
-import qdrantDB from "../../db/qdrant";
-import type { TInput } from "../../schema/input";
-import { buildContext } from "../../util/build-context";
-import env from "../../util/env";
-import { toExpressionTerm } from "../../util/transform";
 import { fieldSchema } from "../../schema/field";
-import { MemorySaver } from "@langchain/langgraph";
+import type { TInput } from "../../schema/input";
+import { toExpressionTerm } from "../../util/transform";
+import { searchFormulaTool } from "./tool/searchFormula";
 
-const checkpointer = new MemorySaver();
+const systemPrompt = `
+You are an AI assistant that extracts a field structure with an embedded expression formula.
 
-const embeddings = new OpenAIEmbeddings({
-  model: "text-embedding-3-large",
-  apiKey: env.OPENAI_API_KEY,
-});
+**Field Structure Rules:**
+- id: generate using randomUUID (uuid v4)
+- uuid: generate using randomUUID (uuid v4)
+- displayName must be the same as name
+- parentId is null
+- format date should be localized formats from DayJS
+- type must be one of: string | number | boolean | date
+- If type is not one of the allowed types, throw an error
 
-const llm = createAgent({
+**Simple Value Rules (populate inside rules[].formula):**
+- If the user provides simple value input, create a rule entry with formula.type = "value" and formula.code = the value
+- If no simple value input is provided, return rules as an empty array
+
+**Expression Rules (populate inside rules[].formula):**
+- If the user provides formula input, use the search_formula_context tool to retrieve relevant expression patterns first
+- Then create a rule entry with formula.type = "expression" and formula.code = the expression tree
+- isGlobal should be true when has formula input
+- Build the expression tree that best matches the formula input using the retrieved expression context
+- If no exact match, infer the closest valid expression from context
+- If no formula input is provided, return rules as an empty array
+
+Return a single field JSON object.`;
+
+const agent = createAgent({
   model: "gpt-4.1-mini",
+  systemPrompt,
   responseFormat: fieldSchema,
-  checkpointer,
+  tools: [searchFormulaTool],
 });
-// const llm = new ChatOpenAI({
-//   model: "gpt-4.1-mini",
-//   temperature: 0,
-//   apiKey: env.OPENAI_API_KEY,
-// }).withStructuredOutput(fieldSchema);
-
-const config = {
-  configurable: { thread_id: "1" },
-  context: { user_id: "1" },
-};
 
 export async function ask(userInput: TInput[]) {
-
   const detailInput = userInput.filter(t => t.type === 'detail').map(t => t.input).join('\n');
   const formulaInput = userInput.filter(t => t.type === 'formula').map(t => t.input).join('\n');
-  const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
-    client: qdrantDB.getClient()!,
-    collectionName: DB.collection.vectorStore,
-  });
-  const retriever = vectorStore.asRetriever({ k: 2 });
-  const retrievedDocs = await retriever.invoke(formulaInput);
-  const context = buildContext(retrievedDocs);
 
-  const generated = await llm.invoke({
+  const generated = await agent.invoke({
     messages: [
-      {
-        role: "system",
-        content: `
-        You are an AI assistant that extracts a field structure with an embedded expression formula.
-  
-        **Field Structure Rules:**
-        - id: generate using randomUUID (uuid v4)
-        - uuid: generate using randomUUID (uuid v4)
-        - displayName must be the same as name
-        - parentId is null
-        - format date should be localized formats from DayJS
-        - type must be one of: string | number | boolean | date
-        - If type is not one of the allowed types, throw an error
-  
-        **Simple Value Rules (populate inside rules[].formula):**
-        - If the user provides simple value input, create a rule entry with formula.type = "value" and formula.code = the value
-        - If no simple value input is provided, return rules as an empty array
-  
-        **Expression Rules (populate inside rules[].formula):**
-        - If the user provides formula input, create a rule entry with formula.type = "expression" and formula.code = the expression tree
-        - isGlobal should be true when has formula input
-        - Build the expression tree that best matches the formula input using the provided expression context
-        - If no exact match, infer the closest valid expression from context
-        - If no formula input is provided, return rules as an empty array
-  
-        Return a single field JSON object.`,
-      },
       {
         role: "user",
         content: `
         **Detail Input (field structure):**
         ${detailInput}
-  
+
         **Formula Input (expression):**
-        ${formulaInput}
-  
-        **Formula Context:**
-        ${context}`,
+        ${formulaInput}`,
       },
     ],
-  }, config);
+  });
+
+  console.log('generated', JSON.stringify(generated, null, 2));
 
   return {
     ...generated.structuredResponse,
@@ -112,11 +80,3 @@ export async function ask(userInput: TInput[]) {
     }),
   };
 }
-
-// const result = await ask([
-//   { type: 'detail', input: 'ฟิลชื่อ amount' },
-//   { type: 'detail', input: 'มี data type เป็น number' },
-//   { type: 'formula', input: 'จงสร้าง 1 + 8' },
-// ]);
-
-// console.log(JSON.stringify(result, null, 2));

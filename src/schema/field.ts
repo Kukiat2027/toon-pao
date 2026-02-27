@@ -31,8 +31,8 @@ export const fieldSchema = z.object({
   formatDate: z.string().nullable(),
   seq: z.number(),
   uuid: z.string(),
+  isOmit: z.boolean(),
   rules: z.array(ruleSchema),
-  isOmit: z.boolean()
 });
 
 export const serviceSchema = z.object({
