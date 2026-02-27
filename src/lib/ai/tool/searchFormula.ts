@@ -15,11 +15,11 @@ const embeddings = new OpenAIEmbeddings({
 
 export const searchFormulaTool = tool(
   async ({ query }) => {
-    console.log('searchFormulaTool input', query);
     const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
       client: qdrantDB.getClient()!,
       collectionName: DB.collection.vectorStore,
     });
+
     const retriever = vectorStore.asRetriever({ k: 2 });
     const retrievedDocs = await retriever.invoke(query);
 
