@@ -1,4 +1,3 @@
-import { MemorySaver } from "@langchain/langgraph";
 import { OpenAIEmbeddings } from "@langchain/openai";
 import { QdrantVectorStore } from "@langchain/qdrant";
 import { tool } from "langchain";
@@ -13,15 +12,22 @@ const embeddings = new OpenAIEmbeddings({
   apiKey: env.OPENAI_API_KEY,
 });
 
+const SCORE_THRESHOLD = 0.4;
+
 export const searchFormulaTool = tool(
   async ({ query }) => {
     const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
       client: qdrantDB.getClient()!,
       collectionName: DB.collection.vectorStore,
     });
+    const results = await vectorStore.similaritySearchWithScore(query, 2);
+    const retrievedDocs = results
+      .filter(([, score]) => score >= SCORE_THRESHOLD)
+      .map(([doc]) => doc);
 
-    const retriever = vectorStore.asRetriever({ k: 2 });
-    const retrievedDocs = await retriever.invoke(query);
+    if (retrievedDocs.length === 0) {
+      return "No relevant formula context found. Return rules as an empty array.";
+    }
 
     return buildContext(retrievedDocs);
   },

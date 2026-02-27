@@ -55,8 +55,6 @@ export async function ask(userInput: TInput[]) {
     ],
   });
 
-  console.log('generated', JSON.stringify(generated, null, 2));
-
   return {
     ...generated.structuredResponse,
     rules: generated.structuredResponse?.rules.map((rule) => {
