@@ -38,19 +38,17 @@ const agent = createAgent({
 });
 
 export async function ask(userInput: TInput[]) {
-  const detailInput = userInput.filter(t => t.type === 'detail').map(t => t.input).join('\n');
-  const formulaInput = userInput.filter(t => t.type === 'formula').map(t => t.input).join('\n');
+  const inputs = userInput.map(t => t.input).join('\n\n');
 
+  console.log('inputs', inputs)
   const generated = await agent.invoke({
     messages: [
       {
         role: "user",
         content: `
         **Detail Input (field structure):**
-        ${detailInput}
-
-        **Formula Input (expression):**
-        ${formulaInput}`,
+        ${inputs}
+      `,
       },
     ],
   });
