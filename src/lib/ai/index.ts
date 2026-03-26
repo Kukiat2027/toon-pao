@@ -43,18 +43,20 @@ const agent = createAgent({
 export async function ask(userInput: TInput[]) {
   const inputs = userInput.map(t => t.input).join('\n\n');
 
-  console.log('inputs', inputs)
-  const generated = await agent.invoke({
-    messages: [
-      {
-        role: "user",
-        content: `
-        **Detail Input (field structure):**
-        ${inputs}
-      `,
-      },
-    ],
-  });
+  const messages = [
+    {
+      role: "user",
+      content: `
+      **Detail Input (field structure):**
+      ${inputs}
+      **Important:** If there are multiple similar or conflicting instructions in the input, always follow the latest/most recent instruction provided.
+    `,
+    }
+  ];
+
+  console.log(messages)
+
+  const generated = await agent.invoke({ messages });
 
   const data = {
     ...generated.structuredResponse,
