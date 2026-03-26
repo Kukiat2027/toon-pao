@@ -56,7 +56,7 @@ export function toMarkdown(field: Field): string {
     `- **Name**: ${field.name}`,
     `- **Type**: \`${field.type}\``,
     `- **Description**: ${field.description}`,
-    `- **Sequence**: ${field.seq + 1}`,
+    `- **Sequence**: ${field.seq}`,
     `- **Is Omit**: ${field.isOmit}`,
   ];
 
