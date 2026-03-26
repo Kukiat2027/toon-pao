@@ -1,7 +1,10 @@
 import { createAgent } from "langchain";
+import type { TExpressionTerm } from "../../schema/expression";
+import type { Field } from "../../schema/field";
 import { fieldSchema } from "../../schema/field";
 import type { TInput } from "../../schema/input";
-import { toExpressionTerm } from "../../util/transform";
+import type { TValue } from "../../schema/value";
+import { toExpressionTerm, toMarkdown } from "../../util/transform";
 import { searchFormulaTool } from "./tool/searchFormula";
 
 const systemPrompt = `
@@ -53,7 +56,7 @@ export async function ask(userInput: TInput[]) {
     ],
   });
 
-  return {
+  const data = {
     ...generated.structuredResponse,
     rules: generated.structuredResponse?.rules.map((rule) => {
       if (!rule.formula) return rule;
@@ -74,5 +77,10 @@ export async function ask(userInput: TInput[]) {
         },
       };
     }),
+  };
+
+  return {
+    data,
+    markdown: toMarkdown(data as Field),
   };
 }
