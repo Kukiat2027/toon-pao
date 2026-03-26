@@ -21,6 +21,10 @@ You are an AI assistant that extracts a field structure with an embedded express
 - If the user provides simple value input, create a rule entry with formula.type = "value" and formula.code = the value
 - If no simple value input is provided, return rules as an empty array
 
+**Data Type:**
+- If the expression involves mathematical calculations (operators like +, -, *, /, %, etc.), the field type should be "number"
+- Mathematical expressions should always result in numeric data types
+
 **Expression Rules (populate inside rules[].formula):**
 - If the user provides formula input, use the search_formula_context tool to retrieve relevant expression patterns first
 - Then create a rule entry with formula.type = "expression" and formula.code = the expression tree
