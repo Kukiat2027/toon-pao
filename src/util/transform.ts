@@ -51,19 +51,17 @@ function formatExpressionTerm(term: TExpressionTerm | TValue): string {
 
 export function toMarkdown(field: Field): string {
   const lines: string[] = [
-    `| Property | Value |`,
-    `| --- | --- |`,
-    `| **ID** | \`${field.id}\` |`,
-    `| **UUID** | \`${field.uuid}\` |`,
-    `| **Display Name** | ${field.displayName} |`,
-    `| **Type** | \`${field.type}\` |`,
-    `| **Description** | ${field.description} |`,
-    `| **Sequence** | ${field.seq} |`,
-    `| **Is Omit** | ${field.isOmit} |`,
+    `- **ID**: \`${field.id}\``,
+    `- **UUID**: \`${field.uuid}\``,
+    `- **Name**: ${field.name}`,
+    `- **Type**: \`${field.type}\``,
+    `- **Description**: ${field.description}`,
+    `- **Sequence**: ${field.seq + 1}`,
+    `- **Is Omit**: ${field.isOmit}`,
   ];
 
   if (field.formatDate) {
-    lines.push(`| **Date Format** | \`${field.formatDate}\` |`);
+    lines.push(`- **Date Format**: \`${field.formatDate}\``);
   }
 
   if (field.rules.length > 0) {
