@@ -16,16 +16,18 @@ const SCORE_THRESHOLD = 0.4;
 
 export const searchFormulaTool = tool(
   async ({ query }) => {
+    console.log('start search formula query')
     const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
       client: qdrantDB.getClient()!,
       collectionName: DB.collection.vectorStore,
     });
+    console.log('vectorStore created')
     const resultsWithScores = await vectorStore.similaritySearchWithScore(query, 2);
-
+    console.log('resultsWithScores created')
     const results = resultsWithScores
       .filter(([, score]) => score >= SCORE_THRESHOLD)
       .map(([doc]) => doc);
-
+    console.log('results created')
     if (results.length === 0) {
       return "No relevant formula context found. Return rules as an empty array.";
     }
