@@ -57,7 +57,7 @@ export function toMarkdown(field: Field): string {
     `- **Name**: ${field.name}`,
     `- **Type**: \`${field.type}\``,
     `- **Description**: ${field.description}`,
-    `- **Sequence**: ${field.seq}`,
+    `- **Sequence**: ${field.seq + 1}`,
     `- **Is Omit**: ${field.isOmit}`,
   ];
 
@@ -68,10 +68,10 @@ export function toMarkdown(field: Field): string {
   if (field.rules.length > 0) {
     lines.push("", "### __Rules__", "");
     for (const [i, rule] of field.rules.entries()) {
-      lines.push(`#### Rule ${i + 1}`);
+      lines.push(`#### __Rule ${i + 1}__`);
       lines.push("");
       lines.push(`- **Global**: ${rule.isGlobal}`);
-      lines.push(`- **Sequence**: ${rule.seq}`);
+      lines.push(`- **Sequence**: ${rule.seq + 1}`);
 
       if (rule.formula) {
         lines.push(`- **Formula Type**: \`${rule.formula.type}\``);
