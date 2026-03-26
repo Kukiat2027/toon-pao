@@ -65,6 +65,7 @@ export async function ask(userInput: TInput[]) {
         ...rule,
         formula: {
           ...rule.formula,
+          ruleType: rule.formula.type,
           code: (() => {
             switch (rule.formula.type) {
               case "expression":
