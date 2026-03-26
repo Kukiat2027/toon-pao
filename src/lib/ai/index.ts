@@ -45,17 +45,18 @@ export async function ask(userInput: TInput[]) {
     {
       role: "user",
       content: `
-      **Detail Input (field structure):**
+      **Detail Input:**
       ${inputs}
+
       **Important:** If there are multiple similar or conflicting instructions in the input, always follow the latest/most recent instruction provided.
-    `,
-    }
+      `,
+    },
   ];
 
   console.log(messages)
 
   const generated = await agent.invoke({ messages });
-
+  console.log('res', generated.structuredResponse)
   const data = {
     ...generated.structuredResponse,
     rules: generated.structuredResponse?.rules.map((rule) => {
@@ -78,6 +79,7 @@ export async function ask(userInput: TInput[]) {
       };
     }),
   };
+  console.log('generated', data)
 
   return {
     data,

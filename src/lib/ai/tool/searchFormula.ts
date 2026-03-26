@@ -12,32 +12,37 @@ const embeddings = new OpenAIEmbeddings({
   apiKey: env.OPENAI_API_KEY,
 });
 
-const SCORE_THRESHOLD = 0.4;
+const SCORE_THRESHOLD = 0.3;
 
 export const searchFormulaTool = tool(
   async ({ query }) => {
-    console.log('start search formula query')
+    console.log('start search formula query', query)
+
     const vectorStore = await QdrantVectorStore.fromExistingCollection(embeddings, {
       client: qdrantDB.getClient()!,
       collectionName: DB.collection.vectorStore,
     });
     console.log('vectorStore created')
+
     const resultsWithScores = await vectorStore.similaritySearchWithScore(query, 2);
-    console.log('resultsWithScores created')
+    console.log('resultsWithScores created', JSON.stringify(resultsWithScores, null, 2))
+
     const results = resultsWithScores
       .filter(([, score]) => score >= SCORE_THRESHOLD)
       .map(([doc]) => doc);
-    console.log('results created')
+
     if (results.length === 0) {
       return "No relevant formula context found. Return rules as an empty array.";
     }
 
-    return buildContext(results);
+    const result = buildContext(results)
+    return result;
   },
   {
     name: "search_formula_context",
-    description:
-      "Search the vector store for expression formula context relevant to the given query. Use this when the user provides formula input to find matching expression patterns.",
+    description: "Search the vector store for expression formula context relevant to the given query. "
+      + "Use this when the user provides formula input to find matching expression patterns."
+      + "The query should be a valid expression formula.",
     schema: z.object({
       query: z.string().describe("The formula query to search for in the vector store"),
     }),
