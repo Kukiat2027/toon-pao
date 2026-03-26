@@ -1,3 +1,4 @@
+import { cors } from '@elysiajs/cors';
 import { swagger } from '@elysiajs/swagger';
 import { Elysia } from "elysia";
 import aiPlugin from "./plugin/ai";
@@ -5,6 +6,7 @@ import qdrantDB from "./db/qdrant";
 import { logger } from "elysia-logger";
 
 const app = new Elysia()
+  .use(cors({ origin: '*' }))
   .use(logger({
     logDetails: true,
   }))

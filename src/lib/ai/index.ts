@@ -1,9 +1,7 @@
 import { createAgent } from "langchain";
-import type { TExpressionTerm } from "../../schema/expression";
 import type { Field } from "../../schema/field";
 import { fieldSchema } from "../../schema/field";
 import type { TInput } from "../../schema/input";
-import type { TValue } from "../../schema/value";
 import { toExpressionTerm, toMarkdown } from "../../util/transform";
 import { searchFormulaTool } from "./tool/searchFormula";
 
