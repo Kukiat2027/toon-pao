@@ -39,7 +39,7 @@ export const searchFormulaTool = tool(
     description:
       "Search the vector store for expression formula context relevant to the given query. Use this when the user provides formula input to find matching expression patterns.",
     schema: z.object({
-      query: z.string().describe("The formula query to search for"),
+      query: z.string().describe("The formula query to search for in the vector store"),
     }),
   }
 );
