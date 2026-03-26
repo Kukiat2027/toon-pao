@@ -51,6 +51,7 @@ function formatExpressionTerm(term: TExpressionTerm | TValue): string {
 
 export function toMarkdown(field: Field): string {
   const lines: string[] = [
+    "### __Field Details__",
     `- **ID**: \`${field.id}\``,
     `- **UUID**: \`${field.uuid}\``,
     `- **Name**: ${field.name}`,
@@ -65,7 +66,7 @@ export function toMarkdown(field: Field): string {
   }
 
   if (field.rules.length > 0) {
-    lines.push("", "### Rules", "");
+    lines.push("", "### __Rules__", "");
     for (const [i, rule] of field.rules.entries()) {
       lines.push(`#### Rule ${i + 1}`);
       lines.push("");
